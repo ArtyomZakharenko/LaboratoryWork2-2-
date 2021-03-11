@@ -15,6 +15,7 @@ void FillStruct(student*, int *);
 void CreateNewFile(FILE*, student* , int *);
 void ViewFile(FILE*, student *, int*);
 void WorkWithFile(FILE*, student*, int*);
+void AddInfo(FILE*, int*);
 
 int main()
 {
@@ -51,7 +52,7 @@ void OperationsWithFile(FILE* lib, student * arr, int * amount, int option) {
         break;
 
     case 3:
-
+        AddInfo(lib, amount);
         break;
 
     case 4:
@@ -121,4 +122,22 @@ void FillStruct(student* arr, int* amount) {
          OperationsWithFile(lib, arr, size, opt);
      } while (opt != 0);
 
+ }
+
+ void AddInfo(FILE* lib, int* size) {
+     struct student profile;
+
+     printf("\nEnter information about students:\n");
+     printf("Student's name: ");
+     scanf("%20s", &profile.fio);
+     printf("Student's record book number: ");
+     scanf("%d", &profile.recbook);
+     printf("Student's 4 marks (use spacebar as a separator): ");
+     scanf("%d %d %d %d", &profile.marks[0], &profile.marks[1], &profile.marks[2], &profile.marks[3]);
+
+     lib = fopen("C:\\file.dat", "ab");
+     fwrite(&profile, sizeof(student), 1, lib);
+     rewind(lib);
+     printf("File has been updated!\n");
+     (*size)++;
  }
