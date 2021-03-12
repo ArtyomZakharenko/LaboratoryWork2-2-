@@ -1,4 +1,11 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+﻿/*Используя функции и режим меню, создать бинарный файл из N структур,
+просмотреть файл, добавить в файл новую информацию и, применяя режим прямого
+доступа, выполнить задание по своему варианту.
+
+Структура имеет вид: фамилия студента, номер зачетной книжки, 4 оценки за
+экзамен. Выводить информацию о всех двоечниках и корректировать ее.*/
+
+#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 
 struct student {
@@ -16,6 +23,9 @@ void CreateNewFile(FILE*, student* , int *);
 void ViewFile(FILE*, student *, int*);
 void WorkWithFile(FILE*, student*, int*);
 void AddInfo(FILE*, int*);
+void ShowBadStudents(FILE*, int*);
+void AskForEdit(FILE*, int*);
+void EditBadStudent(FILE*, int*);
 
 int main()
 {
@@ -25,9 +35,13 @@ int main()
     SetAmount(&size);
     array = CreateStruct(&size);
     FillStruct(array, &size);
+    if (!(binFile = fopen("C:\\file.dat", "w+b"))) {
+        printf("\nCannot read file!");
+        return 1;
+    }
     binFile = fopen("C:\\file.dat", "w+b");
     WorkWithFile(binFile, array, &size);
-
+    fclose(binFile);
     return 0;
 }
 
@@ -56,7 +70,7 @@ void OperationsWithFile(FILE* lib, student * arr, int * amount, int option) {
         break;
 
     case 4:
-
+        ShowBadStudents(lib, amount);
         break;
     case 0:
 
@@ -94,15 +108,17 @@ void FillStruct(student* arr, int* amount) {
 }
 
  void CreateNewFile(FILE * lib, student * arr, int * amount) {
-     lib = fopen("C:\\file.dat", "ab");
+     lib = fopen("C:\\file.dat", "wb");
      fwrite(arr, sizeof(student), *amount, lib);
+     free(arr);
      rewind(lib);
      printf("File has been created!\n");
+     fclose(lib);
  }
 
  void ViewFile(FILE* lib, student * arr, int* amount) {
-     lib = fopen("C:\\file.dat", "rb");
      int i;
+     lib = fopen("C:\\file.dat", "r+b");
      fread(arr, sizeof(student), *amount, lib);
      for (i = 0; i < *amount; i++) {
          printf("\nStudent %d:\n", i + 1);
@@ -111,6 +127,8 @@ void FillStruct(student* arr, int* amount) {
          printf("Student's 4 marks: %d, %d, %d, %d\n", arr[i].marks[0], 
          arr[i].marks[1], arr[i].marks[2], arr[i].marks[3]);
      }
+     rewind(lib);
+     
  }
 
  void WorkWithFile(FILE* lib, student * arr, int* size) {
@@ -126,7 +144,7 @@ void FillStruct(student* arr, int* amount) {
 
  void AddInfo(FILE* lib, int* size) {
      struct student profile;
-
+     lib = fopen("C:\\file.dat", "r+b");
      printf("\nEnter information about students:\n");
      printf("Student's name: ");
      scanf("%20s", &profile.fio);
@@ -137,7 +155,86 @@ void FillStruct(student* arr, int* amount) {
 
      lib = fopen("C:\\file.dat", "ab");
      fwrite(&profile, sizeof(student), 1, lib);
+     printf("\nFile has been updated!\n");
      rewind(lib);
-     printf("File has been updated!\n");
+     
+     
      (*size)++;
+ }
+
+ void ShowBadStudents(FILE* lib, int* size) {
+     struct student* arr = CreateStruct(size);
+     int i, j, temp = -1;
+     fread(arr, sizeof(student), *size, lib);
+
+     for (i = 0; i < *size; i++) {
+         for (j = 0; j < 4; j++) {
+             if (arr[i].marks[j] <= 2) {
+                 temp = i;
+             } 
+         }
+         if (temp == i) {
+             printf("Student's name: %s\n", arr[i].fio);
+             printf("Student's record book number: %d\n", arr[i].recbook);
+             printf("Student's 4 marks: %d, %d, %d, %d\n\n", arr[i].marks[0],
+                 arr[i].marks[1], arr[i].marks[2], arr[i].marks[3]);
+         }
+         
+         
+     }
+
+     if (temp == -1) {
+         printf("There aren't bad students here :)\n");
+     }
+     else {
+         AskForEdit(lib, size);
+     }
+     rewind(lib);
+     fclose(lib);
+ }
+
+ void AskForEdit(FILE * lib, int * size) {
+     //lib = fopen("C:\\file.dat", "rb");
+     char input;
+     getchar();
+     printf("\nWould you like to edit something? Press y for yes or n for no: ");
+     input = getchar();
+     while (input != 'y' && input != 'n') {
+         getchar();
+         printf("Error! You've entered wrong key! Try again!");
+         input = getchar();
+     }
+     switch (input) {
+     case 'y':
+         EditBadStudent(lib, size);
+         
+         break;
+     case 'n':
+         
+         break;
+     }
+ }
+
+ void EditBadStudent(FILE* lib, int* size) {
+     lib = fopen("C:\\file.dat", "r+b");
+     struct student* arr = CreateStruct(size);
+     int i, j, temp = -1;
+     fread(arr, sizeof(student), *size, lib);
+
+     for (i = 0; i < *size; i++) {
+         for (j = 0; j < 4; j++) {
+             if (arr[i].marks[j] <= 2) {
+                 temp = i;
+             }
+         }
+         if (temp == i) {
+             printf("Student's new 4 marks (use spacebar as a separator): ");
+             scanf("%d %d %d %d", &arr[temp].marks[0], &arr[temp].marks[1], &arr[temp].marks[2], &arr[temp].marks[3]);
+
+         }
+     }
+     lib = fopen("C:\\file.dat", "w+b");
+     fwrite(arr, sizeof(student), *size, lib);
+     rewind(lib);
+     fclose(lib);
  }
